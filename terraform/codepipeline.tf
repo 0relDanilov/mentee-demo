@@ -4,8 +4,9 @@ resource "aws_codestarconnections_connection" "github" {
 }
 
 resource "aws_codepipeline" "pipeline" {
-  name     = "mentee-demo-pipeline"
-  role_arn = aws_iam_role.codepipeline_role.arn
+  name          = "mentee-demo-pipeline"
+  role_arn      = aws_iam_role.codepipeline_role.arn
+  pipeline_type = "V2"
 
   artifact_store {
     type     = "S3"
@@ -46,6 +47,20 @@ resource "aws_codepipeline" "pipeline" {
 
       configuration = {
         ProjectName = aws_codebuild_project.app.name
+      }
+    }
+  }
+
+  trigger {
+    provider_type = "CodeStarSourceConnection"
+
+    git_configuration {
+      source_action_name = "Source"
+
+      push {
+        branches {
+          includes = ["main"]
+        }
       }
     }
   }
