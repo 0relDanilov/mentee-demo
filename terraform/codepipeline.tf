@@ -51,6 +51,25 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 
+  stage {
+    name = "Deploy"
+
+    action {
+      name            = "Deploy"
+      category        = "Deploy"
+      owner           = "AWS"
+      provider        = "ECS"
+      version         = "1"
+      input_artifacts = ["build_output"]
+
+      configuration = {
+        ClusterName = aws_ecs_cluster.main.name
+        ServiceName = aws_ecs_service.app.name
+        FileName    = "imagedefinitions.json"
+      }
+    }
+  }
+
   trigger {
     provider_type = "CodeStarSourceConnection"
 

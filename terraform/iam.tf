@@ -126,6 +126,30 @@ data "aws_iam_policy_document" "codepipeline_policy" {
     ]
     resources = [aws_codestarconnections_connection.github.arn]
   }
+
+  # The ECS deploy action invokes a mix of APIs, some of which (notably
+  # RegisterTaskDefinition) take no resource ARN. "*" is the documented
+  # approach for the AWS-managed CodePipeline ECS deploy provider.
+  statement {
+    sid = "EcsDeploy"
+    actions = [
+      "ecs:DescribeServices",
+      "ecs:DescribeTaskDefinition",
+      "ecs:DescribeTasks",
+      "ecs:ListTasks",
+      "ecs:RegisterTaskDefinition",
+      "ecs:UpdateService",
+    ]
+    resources = ["*"]
+  }
+
+  # Required so the Deploy action can pass the task execution role to ECS
+  # when registering a new task definition revision.
+  statement {
+    sid       = "IamPassRoleEcs"
+    actions   = ["iam:PassRole"]
+    resources = [aws_iam_role.ecs_task_execution.arn]
+  }
 }
 
 resource "aws_iam_role_policy" "codepipeline_policy" {
