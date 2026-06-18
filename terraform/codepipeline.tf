@@ -1,5 +1,5 @@
 resource "aws_codestarconnections_connection" "github" {
-  name          = "mentee-demo-gh"
+  name          = "mentee-demo-gh-v2"
   provider_type = "GitHub"
 }
 
