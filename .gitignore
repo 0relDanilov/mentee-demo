@@ -10,3 +10,10 @@ venv/
 .vscode/
 .idea/
 .DS_Store
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/crash.log
+terraform/*.tfvars

@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "--- pre_build ---"
+      - APP_VERSION=$(cat version.txt | tr -d '[:space:]')
+      - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c1-7)
+      - IMAGE_TAG="${APP_VERSION}-${COMMIT_HASH}"
+      - REPO_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+      - echo "Version=$APP_VERSION  Tag=$IMAGE_TAG  Repo=$REPO_URI"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+
+  build:
+    commands:
+      - echo "--- build ---"
+      - docker build --build-arg APP_VERSION="$APP_VERSION" -t "${REPO_URI}:${APP_VERSION}" -t "${REPO_URI}:${IMAGE_TAG}" -t "${REPO_URI}:latest" .
+
+  post_build:
+    commands:
+      - echo "--- post_build ---"
+      - docker push "${REPO_URI}:${APP_VERSION}"
+      - docker push "${REPO_URI}:${IMAGE_TAG}"
+      - docker push "${REPO_URI}:latest"
+      - printf '[{"name":"%s","imageUri":"%s"}]' "$CONTAINER_NAME" "${REPO_URI}:${APP_VERSION}" > imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
